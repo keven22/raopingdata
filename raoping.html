@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SVG 地图</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script type="text/javascript" src="js/lib/jquery.js"></script>
+<script type="text/javascript" src="js/lib/raphael-min.js"></script>
+<script type="text/javascript" src="js/res/raopingMapConfig.js"></script>
+<script type="text/javascript" src="js/map.js"></script>
+<style type="text/css">
+/* base */
+html{background:#fff;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}body,ul,ol,dl,dd,h1,h2,h3,h4,h5,h6,p,form,fieldset,legend,input,textarea,select,button,th,td,div{margin:0; padding:0}button,input,select,textarea{font:12px/1.5 tahoma,Helvetica,arial,\5b8b\4f53}input,select,textarea{font-size:100%}table{border-collapse:collapse;border-spacing:0}th{text-align:inherit}fieldset,img{border:0}iframe{display:block}ol,ul,li{list-style:none}del{text-decoration:line-through}ins,a{text-decoration:none}a:focus{outline:none}h1,h2,h3,h4,h5,h6{font-size:100%}.clear{clear:both}.clearfix:after{content:".";display:block;height:0;font-size:0;clear:both;visibility:hidden}.clearfix{zoom:1}
+/* base */
+body{font:12px/1.5 "Lucida Grande","Lucida Sans Unicode", Tahoma, SimSun,Helvetica,sans-serif; color:#2E313A;}
+.wrap{ width:900px; margin:0 auto; background:url(bg.png); border:1px solid #DDD;}
+a{color:#0e4279; -moz-transition:color 0.3s ease 0s;}
+a:hover{color:#5B636A;}
+h1{ padding:20px 0 0 20px; font-size:24px; line-height:50px;} 
+h2{ margin-top:30px; padding-left:10px; background-color: #ddd; font-size:14px; line-height:30px;}
+/* 提示自定义 */
+.stateTip, #StateTip{display:none; position:absolute; padding:8px; background:#fff; border:2px solid #2385B1; -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px; font-size:12px; font-family:Tahoma; color:#333;}
+.mapInfo i{ display:inline-block; width:15px; height:15px; margin-top:5px; line-height:15px; font-style:normal; background:#aeaeae; color:#fff; font-size:11px; font-family: Tahoma; -webkit-border-radius:15px; border-radius:15px; text-align:center}
+.mapInfo i.active{background:#E27F21;}
+.mapInfo span{ padding:0 5px 0 3px;}
+.mapInfo b{ font-weight:normal; color:#2770B5}
+</style>
+<script type="text/javascript">
+$(function(){
+	// 外部控制地图
+	var url = "ajax.php";
+	$.get(url,function(data){
+		var data = eval('(' + data + ')');
+		var i = 1;
+		for(k in data){
+			if(i <= 22){
+				var _cls = i < 4 ? 'active' : ''; 
+					$('#MapControl .list1').append('<li name="'+k+'"><div class="mapInfo"><i class="'+_cls+'">'+(i++)+'</i><span>'+raopingMapConfig.names[k]+'</span><b>'+data[k].value+'</b></div></li>')
+			}else if(i <= 44){
+				$('#MapControl .list2').append('<li name="'+k+'"><div class="mapInfo"><i>'+(i++)+'</i><span>'+raopingMapConfig.names[k]+'</span><b>'+data[k].value+'</b></div></li>')
+			}else{
+				$('#MapControl .list3').append('<li name="'+k+'"><div class="mapInfo"><i>'+(i++)+'</i><span>'+raopingMapConfig.names[k]+'</span><b>'+data[k].value+'</b></div></li>')
+			}
+		}
+		var mapObj_1 = {};
+		var stateColorList = ['003399', '0058B0', '0071E1', '1C8DFF', '51A8FF', '82C0FF', 'AAD5ee', 'AAD5FF'];
+		$('#RegionMap').SVGMap({
+			external: mapObj_1,
+			mapName: 'raoping',
+			mapWidth: 600,
+			mapHeight: 920,
+			stateData: data,
+			// stateTipWidth: 118,
+			// stateTipHeight: 47,
+			// stateTipX: 2,
+			// stateTipY: 0,
+			stateTipHtml: function (mapData, obj) {
+				var _value = mapData[obj.id].value;
+				var _idx = mapData[obj.id].index;
+				var active = '';
+				_idx < 4 ? active = 'active' : active = '';
+				var tipStr = '<div class="mapInfo"><i class="' + active + '">' + _idx + '</i><span>' + obj.name + '</span><b>' + _value + '</b></div>';
+				return tipStr;
+			}
+		});
+		$('#MapControl li').hover(function () {
+			var thisName = $(this).attr('name');
+			var thisHtml = $(this).html();
+			$('#MapControl li').removeClass('select');
+			$(this).addClass('select');
+			$(document.body).append('<div id="StateTip"></div');
+			$('#StateTip').css({
+				left: $(mapObj_1[thisName].node).offset().left - 50,
+				top: $(mapObj_1[thisName].node).offset().top - 40
+			}).html(thisHtml).show();
+			mapObj_1[thisName].attr({
+				fill: '#E99A4D'
+			});
+		}, function () {
+			var thisName = $(this).attr('name');
+			$('#StateTip').remove();
+			$('#MapControl li').removeClass('select');
+			mapObj_1[$(this).attr('name')].attr({
+				fill: "#" + stateColorList[data[$(this).attr('name')].stateInitColor]
+			});
+		});
+		$('#MapColor').show();
+	});
+});
+</script>
+</head>
+<body>
+<div class="wrap">
+	<h1>饶平数据地图</h1>
+	<div class="items" id="Item1">
+		<h2>地图</h2>
+		<a href="javascript:;" class="fold"></a>
+		<div class="itemCon">
+			<style type="text/css">
+.regionList{float:left; margin-top:15px;}
+.regionList ul{float:left; width:130px; height:100%; margin:0 30px 0 20px; display:inline; font-family:"微软雅黑"}
+.regionList ul li{ height:24px; margin-left:10px; padding:0 0px; border:1px solid #fff; line-height:24px;}
+.regionList ul li.select{border:1px solid #D3D3D3; background:#FFF1BF}
+.mapInfo i{ display:inline-block; width:15px; height:15px; margin-top:5px; line-height:15px; font-style:normal; background:#aeaeae; color:#fff; font-size:11px; font-family: Tahoma; -webkit-border-radius:15px; border-radius:15px; text-align:center}
+.mapInfo i.active{background:#E27F21;}
+.mapInfo span{ padding:0 5px 0 3px;}
+.mapInfo b{ font-weight:normal; color:#2770B5}
+.regionMap{float:left; margin-left:20px; display:inline;}
+			</style>
+			<div id="Region" style="position:relative; height:950px;">
+				<div class="regionList" id="MapControl">
+					<ul class="list1">
+					</ul>
+				</div>
+				<div class="regionMap" id="RegionMap">
+				</div>
+				<div id="MapColor" style=" display:none; float:left; width:30px; height:180px; margin:80px 0 0 10px; display:inline; background:url(images/map_color.png) center 0;">
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<link rel="stylesheet" type="text/css" href="css/SyntaxHighlighter.css">
+<script type="text/javascript" src="js/lib/SyntaxHighlighter.js"></script>
+</body>
+</html>
